@@ -32,7 +32,7 @@ function onCommand(userobj, command, target, args)
         if (command.indexOf("scribble ") == 0)
         {
             var scribble = new Scribble();
-            scribble.src = command.substr(9);//http://5.206.224.110:5000/scribble?url="+
+            scribble.src = command.substr(9);
             scribble.oncomplete = scribbleReceived;
             scribble.download(userobj.name);
         }
