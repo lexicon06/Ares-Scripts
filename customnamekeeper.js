@@ -12,7 +12,7 @@ function onJoin(userobj) {
     }
 }
 
-function onTextBefore(userobj, text) {
+function onBotPM(userobj, text) {
     // Check if user has an active menu and if it's still valid
     if (userMenus[userobj.name]) {
         var menu = userMenus[userobj.name];
