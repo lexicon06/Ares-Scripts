@@ -308,9 +308,9 @@ var TutiFrutiPlayers = {
     /**
      * Inicializa jugador
      */
-    inicializarJugador: function(user) {
-        if (!user.tutifruti) {
-            user.tutifruti = {
+    inicializarJugador: function(player) {
+        if (!player.tutifruti) {
+            player.tutifruti = {
                 jugando: false,
                 respuestas: {},
                 puntos: 0,
@@ -324,17 +324,17 @@ var TutiFrutiPlayers = {
     /**
      * Reinicia respuestas del jugador
      */
-    reiniciarRespuestas: function(user) {
-        this.inicializarJugador(user);
-        user.tutifruti.respuestas = {};
-        user.tutifruti.tiempoRespuesta = 0;
+    reiniciarRespuestas: function(player) {
+        this.inicializarJugador(player);
+        player.tutifruti.respuestas = {};
+        player.tutifruti.tiempoRespuesta = 0;
     },
 
     /**
      * Registra respuesta del jugador
      */
-    registrarRespuesta: function(user, respuestas) {
-        this.inicializarJugador(user);
+    registrarRespuesta: function(player, respuestas) {
+        this.inicializarJugador(player);
         
         var puntosGanados = 0;
         var respuestasValidas = 0;
@@ -354,7 +354,7 @@ var TutiFrutiPlayers = {
             var puntos = TutiFrutiUtils.calcularPuntos(esValida, esUnica);
             
             if (esValida) {
-                user.tutifruti.respuestas[categoria] = respuesta;
+                player.tutifruti.respuestas[categoria] = respuesta;
                 puntosGanados += puntos;
                 respuestasValidas++;
                 
@@ -365,14 +365,14 @@ var TutiFrutiPlayers = {
             }
         }
         
-        user.tutifruti.puntos += puntosGanados;
-        user.tutifruti.tiempoRespuesta = this.getTiempoTranscurrido();
+        player.tutifruti.puntos += puntosGanados;
+        player.tutifruti.tiempoRespuesta = this.getTiempoTranscurrido();
         
         return {
             puntosGanados: puntosGanados,
             respuestasValidas: respuestasValidas,
             detalles: detalles,
-            tiempoRespuesta: user.tutifruti.tiempoRespuesta
+            tiempoRespuesta: player.tutifruti.tiempoRespuesta
         };
     },
 
@@ -438,9 +438,9 @@ var TutiFrutiGame = {
     /**
      * Inicia una nueva sesión de juego
      */
-    iniciarSesion: function(user, modoCompetitivo) {
+    iniciarSesion: function(player, modoCompetitivo) {
         if (TutiFrutiState.sesionActiva) {
-            print(user, "(!) Ya hay una sesión activa. Escribe 'tuti stop' para detenerla.");
+            print(player, "(!) Ya hay una sesión activa. Escribe 'tuti stop' para detenerla.");
             return;
         }
         
@@ -455,33 +455,33 @@ var TutiFrutiGame = {
             u.tutifruti.jugando = true;
         });
         
-        this.mostrarInicio(user);
+        this.mostrarInicio(player);
     },
 
     /**
      * Detiene la sesión actual
      */
-    detenerSesion: function(user) {
+    detenerSesion: function(player) {
         if (!TutiFrutiState.sesionActiva) {
-            print(user, "(!) No hay sesión activa.");
+            print(player, "(!) No hay sesión activa.");
             return;
         }
         
         this.mostrarResultadosFinales();
         this.reiniciarSesion();
-        print(0, "(X) Sesión de Tuti Fruti terminada por " + user.name);
+        print(0, "(X) Sesión de Tuti Fruti terminada por " + player.name);
     },
 
     /**
      * Muestra el inicio del juego
      */
-    mostrarInicio: function(user) {
+    mostrarInicio: function(player) {
         print(0, "");
         print(0, "═══════════════════════════════════════");
         print(0, "        🎯 TUTI FRUTI INICIADO! 🎯");
         print(0, "═══════════════════════════════════════");
         print(0, "");
-        print(0, "📝 Iniciado por: " + user.name);
+        print(0, "📝 Iniciado por: " + player.name);
         print(0, "🔤 Letra: " + TutiFrutiState.letraActual);
         print(0, "📋 Categorías: " + TutiFrutiState.categorias.join(" • "));
         print(0, "");
@@ -503,8 +503,8 @@ var TutiFrutiGame = {
     /**
      * Procesa respuestas del jugador
      */
-    procesarRespuestas: function(user, texto) {
-        if (!TutiFrutiState.sesionActiva || !user.tutifruti.jugando) {
+    procesarRespuestas: function(player, texto) {
+        if (!TutiFrutiState.sesionActiva || !player.tutifruti.jugando) {
             return;
         }
         
@@ -516,73 +516,73 @@ var TutiFrutiGame = {
         }
         
         if (respuestas.length !== TutiFrutiState.categorias.length) {
-            print(user, "(!) Debes escribir " + TutiFrutiState.categorias.length + " respuestas separadas por comas.");
-            print(user, "Formato: " + TutiFrutiState.categorias.join(", "));
+            print(player, "(!) Debes escribir " + TutiFrutiState.categorias.length + " respuestas separadas por comas.");
+            print(player, "Formato: " + TutiFrutiState.categorias.join(", "));
             return;
         }
         
-        var resultado = TutiFrutiPlayers.registrarRespuesta(user, respuestas);
-        this.mostrarResultadoRespuesta(user, resultado);
+        var resultado = TutiFrutiPlayers.registrarRespuesta(player, respuestas);
+        this.mostrarResultadoRespuesta(player, resultado);
     },
 
     /**
      * Muestra resultado de respuesta individual
      */
-    mostrarResultadoRespuesta: function(user, resultado) {
-        print(user, "");
-        print(user, "━━━ RESULTADO DE " + user.name.toUpperCase() + " ━━━");
-        print(user, "⏱️  Tiempo: " + TutiFrutiUtils.formatearTiempo(resultado.tiempoRespuesta));
-        print(user, "✅ Válidas: " + resultado.respuestasValidas + "/" + TutiFrutiState.categorias.length);
-        print(user, "🏆 Puntos ganados: " + resultado.puntosGanados);
-        print(user, "📊 Total acumulado: " + user.tutifruti.puntos);
-        print(user, "");
+    mostrarResultadoRespuesta: function(player, resultado) {
+        print(player, "");
+        print(player, "━━━ RESULTADO DE " + player.name.toUpperCase() + " ━━━");
+        print(player, "⏱️  Tiempo: " + TutiFrutiUtils.formatearTiempo(resultado.tiempoRespuesta));
+        print(player, "✅ Válidas: " + resultado.respuestasValidas + "/" + TutiFrutiState.categorias.length);
+        print(player, "🏆 Puntos ganados: " + resultado.puntosGanados);
+        print(player, "📊 Total acumulado: " + player.tutifruti.puntos);
+        print(player, "");
         
         for (var i = 0; i < resultado.detalles.length; i++) {
-            print(user, "• " + resultado.detalles[i]);
+            print(player, "• " + resultado.detalles[i]);
         }
         
-        print(user, "");
+        print(player, "");
         
         // Notificar al canal si es una buena puntuación
         if (resultado.puntosGanados >= 40) {
-            print(0, "🔥 " + user.name + " obtuvo " + resultado.puntosGanados + " puntos! 🔥");
+            print(0, "🔥 " + player.name + " obtuvo " + resultado.puntosGanados + " puntos! 🔥");
         }
     },
 
     /**
      * Muestra ranking actual
      */
-    mostrarRanking: function(user) {
+    mostrarRanking: function(player) {
         var ranking = TutiFrutiPlayers.obtenerRanking();
         
         if (ranking.length === 0) {
-            print(user, "(!) Aún no hay puntuaciones.");
+            print(player, "(!) Aún no hay puntuaciones.");
             return;
         }
         
-        print(user, "");
-        print(user, "🏆 ═══ RANKING ACTUAL ═══ 🏆");
-        print(user, "");
+        print(player, "");
+        print(player, "🏆 ═══ RANKING ACTUAL ═══ 🏆");
+        print(player, "");
         
         for (var i = 0; i < Math.min(10, ranking.length); i++) {
             var pos = i + 1;
             var jugador = ranking[i];
             var medalla = pos === 1 ? "🥇" : pos === 2 ? "🥈" : pos === 3 ? "🥉" : "🏅";
             
-            print(user, medalla + " " + pos + ". " + jugador.nombre + 
+            print(player, medalla + " " + pos + ". " + jugador.nombre + 
                   " - " + jugador.puntos + " pts (" + 
                   TutiFrutiUtils.formatearTiempo(jugador.tiempo) + ")");
         }
         
-        print(user, "");
+        print(player, "");
     },
 
     /**
      * Obtiene pista para categoría
      */
-    obtenerPista: function(user, categoria) {
+    obtenerPista: function(player, categoria) {
         if (!TutiFrutiState.sesionActiva) {
-            print(user, "(!) No hay sesión activa.");
+            print(player, "(!) No hay sesión activa.");
             return;
         }
         
@@ -597,25 +597,25 @@ var TutiFrutiGame = {
         }
         
         if (!categoriaEncontrada) {
-            print(user, "(!) Categoría no válida. Usa: " + TutiFrutiState.categorias.join(", "));
+            print(player, "(!) Categoría no válida. Usa: " + TutiFrutiState.categorias.join(", "));
             return;
         }
         
         var pista = TutiFrutiUtils.obtenerPista(categoriaEncontrada, TutiFrutiState.letraActual);
-        print(user, "💡 Pista para " + categoriaEncontrada + " (" + TutiFrutiState.letraActual + "): " + pista);
+        print(player, "💡 Pista para " + categoriaEncontrada + " (" + TutiFrutiState.letraActual + "): " + pista);
     },
 
     /**
      * Muestra tiempo transcurrido
      */
-    mostrarTiempo: function(user) {
+    mostrarTiempo: function(player) {
         if (!TutiFrutiState.sesionActiva) {
-            print(user, "(!) No hay sesión activa.");
+            print(player, "(!) No hay sesión activa.");
             return;
         }
         
         var tiempoTranscurrido = TutiFrutiPlayers.getTiempoTranscurrido();
-        print(user, "⏰ Tiempo transcurrido: " + TutiFrutiUtils.formatearTiempo(tiempoTranscurrido));
+        print(player, "⏰ Tiempo transcurrido: " + TutiFrutiUtils.formatearTiempo(tiempoTranscurrido));
     },
 
     /**
@@ -689,54 +689,54 @@ var TutiFrutiGame = {
     /**
      * Muestra ayuda
      */
-    mostrarAyuda: function(user) {
-        print(user, "");
-        print(user, "🎯 ═══ AYUDA TUTI FRUTI ═══ 🎯");
-        print(user, "");
-        print(user, "📝 COMANDOS:");
-        print(user, "• 'tuti' - Iniciar juego normal");
-        print(user, "• 'tuti competitivo' - Iniciar modo competitivo");
-        print(user, "• 'tuti stop' - Terminar juego actual");
-        print(user, "• 'pista [categoria]' - Obtener pista");
-        print(user, "• 'tiempo' - Ver tiempo transcurrido");
-        print(user, "• 'ranking' - Ver puntuaciones");
-        print(user, "• 'stats' - Ver tus estadísticas");
-        print(user, "");
-        print(user, "🎮 CÓMO JUGAR:");
-        print(user, "1. Alguien inicia con 'tuti'");
-        print(user, "2. Se asigna una letra aleatoria");
-        print(user, "3. Escribes palabras separadas por comas");
-        print(user, "4. Ganas puntos por respuestas válidas");
-        print(user, "5. Respuestas únicas dan puntos bonus");
-        print(user, "");
-        print(user, "💡 CONSEJOS:");
-        print(user, "• Usa la base de datos incluida");
-        print(user, "• Las respuestas deben empezar con la letra");
-        print(user, "• Palabras únicas dan +5 puntos bonus");
-        print(user, "• Piensa rápido para mejores tiempos");
-        print(user, "");
+    mostrarAyuda: function(player) {
+        print(player, "");
+        print(player, "🎯 ═══ AYUDA TUTI FRUTI ═══ 🎯");
+        print(player, "");
+        print(player, "📝 COMANDOS:");
+        print(player, "• 'tuti' - Iniciar juego normal");
+        print(player, "• 'tuti competitivo' - Iniciar modo competitivo");
+        print(player, "• 'tuti stop' - Terminar juego actual");
+        print(player, "• 'pista [categoria]' - Obtener pista");
+        print(player, "• 'tiempo' - Ver tiempo transcurrido");
+        print(player, "• 'ranking' - Ver puntuaciones");
+        print(player, "• 'stats' - Ver tus estadísticas");
+        print(player, "");
+        print(player, "🎮 CÓMO JUGAR:");
+        print(player, "1. Alguien inicia con 'tuti'");
+        print(player, "2. Se asigna una letra aleatoria");
+        print(player, "3. Escribes palabras separadas por comas");
+        print(player, "4. Ganas puntos por respuestas válidas");
+        print(player, "5. Respuestas únicas dan puntos bonus");
+        print(player, "");
+        print(player, "💡 CONSEJOS:");
+        print(player, "• Usa la base de datos incluida");
+        print(player, "• Las respuestas deben empezar con la letra");
+        print(player, "• Palabras únicas dan +5 puntos bonus");
+        print(player, "• Piensa rápido para mejores tiempos");
+        print(player, "");
     },
 
     /**
      * Muestra estadísticas del usuario
      */
-    mostrarEstadisticas: function(user) {
-        TutiFrutiPlayers.inicializarJugador(user);
+    mostrarEstadisticas: function(player) {
+        TutiFrutiPlayers.inicializarJugador(player);
         
-        print(user, "");
-        print(user, "📊 ═══ TUS ESTADÍSTICAS ═══ 📊");
-        print(user, "");
-        print(user, "🎮 Partidas jugadas: " + user.tutifruti.partidasJugadas);
-        print(user, "🏆 Mejor puntuación: " + user.tutifruti.mejorPuntuacion);
-        print(user, "📈 Puntos actuales: " + user.tutifruti.puntos);
-        print(user, "");
+        print(player, "");
+        print(player, "📊 ═══ TUS ESTADÍSTICAS ═══ 📊");
+        print(player, "");
+        print(player, "🎮 Partidas jugadas: " + player.tutifruti.partidasJugadas);
+        print(player, "🏆 Mejor puntuación: " + player.tutifruti.mejorPuntuacion);
+        print(player, "📈 Puntos actuales: " + player.tutifruti.puntos);
+        print(player, "");
         
-        if (user.tutifruti.partidasJugadas > 0) {
-            var promedio = Math.round(user.tutifruti.mejorPuntuacion / user.tutifruti.partidasJugadas * 100) / 100;
-            print(user, "📊 Promedio estimado: " + promedio + " puntos");
+        if (player.tutifruti.partidasJugadas > 0) {
+            var promedio = Math.round(player.tutifruti.mejorPuntuacion / player.tutifruti.partidasJugadas * 100) / 100;
+            print(player, "📊 Promedio estimado: " + promedio + " puntos");
         }
         
-        print(user, "");
+        print(player, "");
     }
 };
 
@@ -748,8 +748,8 @@ var TutiFrutiGame = {
  * Inicialización al cargar
  */
 function onLoad() {
-    Users.local(function(user) {
-        TutiFrutiPlayers.inicializarJugador(user);
+    Users.local(function(player) {
+        TutiFrutiPlayers.inicializarJugador(player);
     });
     print("🎯 Tuti Fruti cargado con base de datos completa!");
 }
@@ -757,45 +757,45 @@ function onLoad() {
 /**
  * Usuario se une al canal
  */
-function onJoin(user) {
-    TutiFrutiPlayers.inicializarJugador(user);
+function onJoin(player) {
+    TutiFrutiPlayers.inicializarJugador(player);
     if (TutiFrutiState.sesionActiva) {
-        user.tutifruti.jugando = true;
-        print(user, "🎯 Te has unido a la sesión de Tuti Fruti!");
-        print(user, "🔤 Letra actual: " + TutiFrutiState.letraActual);
-        print(user, "📋 Categorías: " + TutiFrutiState.categorias.join(", "));
+        player.tutifruti.jugando = true;
+        print(player, "🎯 Te has unido a la sesión de Tuti Fruti!");
+        print(player, "🔤 Letra actual: " + TutiFrutiState.letraActual);
+        print(player, "📋 Categorías: " + TutiFrutiState.categorias.join(", "));
     }
 }
 
 /**
  * Procesa texto del usuario
  */
-function onTextBefore(user, text) {
+function onTextBefore(player, text) {
     var textoLimpio = TutiFrutiUtils.limpiarTexto(text);
     
     // Comandos principales
     if (textoLimpio === "tuti" || textoLimpio === "tuti fruti") {
-        TutiFrutiGame.iniciarSesion(user, false);
+        TutiFrutiGame.iniciarSesion(player, false);
     } else if (textoLimpio === "tuti competitivo") {
-        TutiFrutiGame.iniciarSesion(user, true);
+        TutiFrutiGame.iniciarSesion(player, true);
     } else if (textoLimpio === "tuti stop" || textoLimpio === "terminar") {
-        TutiFrutiGame.detenerSesion(user);
+        TutiFrutiGame.detenerSesion(player);
     } else if (textoLimpio === "ranking") {
-        TutiFrutiGame.mostrarRanking(user);
+        TutiFrutiGame.mostrarRanking(player);
     } else if (textoLimpio === "tiempo") {
-        TutiFrutiGame.mostrarTiempo(user);
+        TutiFrutiGame.mostrarTiempo(player);
     } else if (textoLimpio === "stats" || textoLimpio === "estadisticas") {
-        TutiFrutiGame.mostrarEstadisticas(user);
+        TutiFrutiGame.mostrarEstadisticas(player);
     } else if (textoLimpio === "ayuda tuti" || textoLimpio === "tuti ayuda") {
-        TutiFrutiGame.mostrarAyuda(user);
+        TutiFrutiGame.mostrarAyuda(player);
     } else if (textoLimpio.indexOf("pista ") === 0) {
         var categoria = textoLimpio.substring(6);
-        TutiFrutiGame.obtenerPista(user, categoria);
+        TutiFrutiGame.obtenerPista(player, categoria);
     } 
     // Procesar respuestas (debe contener comas y estar en sesión activa)
-    else if (TutiFrutiState.sesionActiva && user.tutifruti && user.tutifruti.jugando && 
+    else if (TutiFrutiState.sesionActiva && player.tutifruti && player.tutifruti.jugando && 
              textoLimpio.indexOf(",") > -1) {
-        TutiFrutiGame.procesarRespuestas(user, textoLimpio);
+        TutiFrutiGame.procesarRespuestas(player, textoLimpio);
     }
     
     return text;
@@ -804,12 +804,12 @@ function onTextBefore(user, text) {
 /**
  * Comando de ayuda
  */
-function onHelp(user) {
-    print(user, "🎯 Tuti Fruti Commands:");
-    print(user, "• 'tuti' - Start normal game");
-    print(user, "• 'tuti competitivo' - Start competitive mode");  
-    print(user, "• 'ayuda tuti' - Full help guide");
-    print(user, "• 'stats' - Your statistics");
+function onHelp(player) {
+    print(player, "🎯 Tuti Fruti Commands:");
+    print(player, "• 'tuti' - Start normal game");
+    print(player, "• 'tuti competitivo' - Start competitive mode");  
+    print(player, "• 'ayuda tuti' - Full help guide");
+    print(player, "• 'stats' - Your statistics");
 }
 
 // Inicialización
