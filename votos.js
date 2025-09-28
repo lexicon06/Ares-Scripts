@@ -292,24 +292,24 @@ function onTimer() {
     }
 }
 
-function onJoin(u) {
-    u.voto = false;
+function onJoin(userobj) {
+    userobj.voto = false;
 }
 
-function onTextBefore(u, tx) {
+function onTextBefore(userobj, text) {
     if (!votacion) {
-        return tx;
+        return text;
     }
     
-    var textoLimpio = stripColors(tx);
+    var textoLimpio = stripColors(text);
     // Trim manual
     textoLimpio = textoLimpio.replace(/^\s+|\s+$/g, '');
     
-    if (procesarVoto(u, textoLimpio)) {
+    if (procesarVoto(userobj, textoLimpio)) {
         return ""; // Suprimir mensaje de voto
     }
     
-    return tx;
+    return text;
 }
 
 // Función auxiliar mejorada pero compatible
