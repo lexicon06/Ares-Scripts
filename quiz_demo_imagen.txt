@@ -1,0 +1,60 @@
+Q:¿Cuál es la capital de Francia?
+A:París[or]paris
+Q:¿Qué animal se muestra en esta imagen?###https://picsum.photos/id/237/400/300
+A:Perro[or]dog[or]cachorro[or]can
+Q:¿En qué año comenzó la Primera Guerra Mundial?
+A:1914[or]mil novecientos catorce
+Q:¿Qué tipo de paisaje se ve en esta imagen?###https://picsum.photos/id/1015/400/300
+A:Montaña[or]montañas[or]paisaje montañoso[or]cordillera
+Q:¿Cuál es la fórmula química del agua?
+A:H2O[or]h2o[or]agua
+Q:¿Qué se observa principalmente en esta fotografía?###https://picsum.photos/id/1025/400/300
+A:Bosque[or]árboles[or]naturaleza[or]selva[or]vegetación
+Q:¿Quién escribió "Romeo y Julieta"?
+A:Shakespeare[or]William Shakespeare[or]william shakespeare
+Q:¿Qué tipo de transporte aparece en la imagen?###https://picsum.photos/id/111/400/300
+A:Bicicleta[or]bici[or]bicycle[or]bike
+Q:¿Cuál es el planeta más cercano al Sol?
+A:Mercurio[or]mercurio
+Q:¿Qué elemento arquitectónico se destaca en esta foto?###https://picsum.photos/id/152/400/300
+A:Puente[or]bridge[or]estructura
+Q:¿En qué continente está ubicado Brasil?
+A:América[or]Sudamérica[or]América del Sur[or]sudamerica
+Q:¿Qué tipo de ambiente se muestra en esta imagen?###https://picsum.photos/id/200/400/300
+A:Playa[or]mar[or]océano[or]costa[or]arena
+Q:¿Cuántos minutos tiene una hora?
+A:60[or]sesenta
+Q:¿Qué se puede observar en el cielo de esta fotografía?###https://picsum.photos/id/325/400/300
+A:Nubes[or]cielo[or]sky[or]clouds
+Q:¿Cuál es la moneda de Estados Unidos?
+A:Dólar[or]dollar[or]dolar[or]USD
+Q:¿Qué tipo de estructura se ve en esta imagen?###https://picsum.photos/id/429/400/300
+A:Edificio[or]building[or]construcción[or]arquitectura
+Q:¿En qué estación del año caen las hojas?
+A:Otoño[or]otono[or]autumn
+Q:¿Qué elemento natural domina esta fotografía?###https://picsum.photos/id/500/400/300
+A:Agua[or]río[or]lake[or]lago[or]water
+Q:¿Cuál es el metal más valioso comúnmente conocido?
+A:Oro[or]gold
+Q:¿Qué tipo de iluminación se aprecia en esta imagen?###https://picsum.photos/id/580/400/300
+A:Luz natural[or]sol[or]sunshine[or]daylight[or]luz del día
+Q:¿Cuántos lados tiene un triángulo?
+A:3[or]tres
+Q:¿Qué textura predomina en esta fotografía?###https://picsum.photos/id/669/400/300
+A:Madera[or]wood[or]wooden[or]tabla
+Q:¿Cuál es el idioma oficial de Brasil?
+A:Portugués[or]portugues[or]portuguese
+Q:¿Qué tipo de vegetación se observa en esta imagen?###https://picsum.photos/id/715/400/300
+A:Flores[or]flower[or]jardín[or]jardin[or]plants
+Q:¿En qué año llegó el hombre a la Luna?
+A:1969[or]mil novecientos sesenta y nueve
+Q:¿Qué ambiente urbano se muestra en esta foto?###https://picsum.photos/id/823/400/300
+A:Ciudad[or]calle[or]street[or]urban[or]urbano
+Q:¿Cuál es el océano más grande?
+A:Pacífico[or]Océano Pacífico[or]pacifico[or]Pacific
+Q:¿Qué tipo de objeto se destaca en esta imagen?###https://picsum.photos/id/887/400/300
+A:Mesa[or]table[or]mueble[or]furniture
+Q:¿Cuántas patas tiene un gato?
+A:4[or]cuatro
+Q:¿Qué elemento decorativo se ve en esta fotografía?###https://picsum.photos/id/950/400/300
+A:Arte[or]cuadro[or]pintura[or]decoración[or]wall art
