@@ -1,448 +1,663 @@
 print(0, "quiz.js has been loaded correctly");
 
-try {
-  quiztxt = File.load("quiz.txt").split("\n");
-} catch (e) {
-  quiztxt = new Array();
-}
+// Configuración del juego
+var QuizConfig = {
+    QUIZ_FILE: "quiz.txt",
+    TEMPLATE_FILE: "quiz_template.ini",
+    QUESTION_TIMEOUT: 20,
+    MAX_PLAYERS: 100,
+    DEFAULT_POINTS: 3,
+    POINTS_STRUCTURE: {
+        FIRST: 3,
+        SECOND: 2,
+        OTHER: 1
+    }
+};
 
-if (quiztxt.length < 1) {
-  quiztxt.push("Q:Example question");
-  quiztxt.push("A:Example answer[or]Answer Example");
+// Estado del juego
+var QuizState = {
+    questions: [],
+    template: [],
+    totalQuestions: 0,
+    currentQuestion: 1,
+    waitingForAnswer: true,
+    currentPoints: QuizConfig.DEFAULT_POINTS,
+    timer: 0,
+    gameActive: false,
+    currentQuestionIndex: 0,
+    winnerName: "",
+    drawNames: "",
+    playersWithPoints: 0,
+    playerPoints: [],
+    correctAnswers: [],
+    showPlayers: true
+};
 
-  File.save("quiz.txt", quiztxt.join("\r\n"));
-  print(
-    0,
-    "quiz.txt now has been created, place questions and answer in: \x5CScripting\x5Cquiz\x2Ejs\x5CData\x5Cquiz\x2Etxt"
-  );
-}
+// Utilidades
+var QuizUtils = {
+    /**
+     * Limpia texto removiendo colores y caracteres especiales
+     * @param {string} text - Texto a limpiar
+     * @return {string} Texto limpio
+     */
+    cleanText: function(text) {
+        if (!text || typeof text !== 'string') {
+            return '';
+        }
+        
+        text = text.toLowerCase();
+        text = stripColors(text);
+        
+        // Mantener letras, números, espacios y caracteres acentuados
+        return text.replace(/[^a-zA-ZáàéèíìóòúùáàÁÀñÑ0-9 ]+/g, '');
+    },
 
+    /**
+     * Corrige formato de plantilla
+     * @param {string} templateLine - Línea de plantilla
+     * @return {string} Línea corregida
+     */
+    fixTemplate: function(templateLine) {
+        if (!templateLine) return '';
+        
+        return templateLine
+            .replace(/\xEF\xBB\xBF/gi, "")
+            .replace(/\x02\x39/gi, "\x09")
+            .replace(/\x02\x36/gi, "\x06")
+            .replace(/\x02\x37/gi, "\x07")
+            .replace(/\x02\x33/gi, "\x03")
+            .replace(/\x02\x35/gi, "\x05");
+    },
 
-
-try {
-  template = File.load("quiz_template.ini").split("\n");
-} catch (e) {
-  template = new Array();
-}
-
-
-
-if (template.length < 1) {
-
-
-
-
-
-  template[0] = "\u2591\u2591\u2591\u2591\u2591\u2591\u2591";
-  template[1] = "\x5BQUIZ\x5D\u2591";
-  template[2] = "\u2591\u2591\u2591\u2591\u2591\u2591\u2591";
-  template[3] = "string=\x0314Porfavor primero cargue algunas preguntas";
-  template[4] =
-    "string=\x0314Trivia ha sido iniciada por \x0310+n\x0314 - buena suerte!! :P";
-  template[5] = "string=\x0314Trivia detenida por \x0310+n";
-  template[6] = "string=\x0301Ó";
-  template[7] = "string=\x0314Pregunta \x0310+x \x0314de \x0310+y";
-  template[8] = "string=\x0301(I) +q";
-  template[9] = "string=\x0314Tiempo fuera!!";
-  template[10] = "string=\x0314La Respuesta era: \x0310+a";
-  template[11] = "string=\x0314Estas personas contestaron bien:";
-  template[12] = "string=\x0314(N) Nadie ha respondido correctamente (N)";
-  template[13] = "string=(H)\x0310 +n \x0315[\x0301+p \x0314points\x0315]";
-  template[14] =
-    "string=\x0314Bien hecho \x0310+n\x0314, has contestado primero!! :)";
-  template[15] =
-    "string=\x0314Bien hecho \x0310+n\x0314, has contestado segundo!! :)";
-  template[16] =
-    "string=\x0314Bien hecho \x0310+n\x0314, has contestado correctamente!! :)";
-  template[17] =
-    "string=\x0314La trivia ha finalizado - aqui estan los resultados finales!!";
-  template[18] =
-    "string=\x0314(N) Nadie ha contestado ninguna de las preguntas correctamente (N)";
-  template[19] = "string=\x0310+n \x0314recibió \x0301+p \x0314puntos";
-  template[20] =
-    "string=(H) (H) (H) \x0310+n \x0314ha ganado el juego con \x0301+p \x0314puntos!! (H) (H) (H)";
-
-  File.save("quiz_template.ini", template.join("\r\n"));
-  print(0, "quiz_template.ini template has been created successfully");
-}
-
-for (key in template) {
-  template[key] = FixTemplate(template[key]);
-}
-
-
-
-
-var quizend = quiztxt.length;
-var qcount = 1;
-var restype = true;
-var points = 3;
-var quiztimer = 0;
-var quizon = false;
-var number = 0;
-var dn = "";
-var wn = "";
-var PlayersOk = 0;
-var cpts = new Array();
-var splayers = true;
-
-for (var calc = 0; calc < 100; calc++) {
-  cpts[calc] = 0;
-}
-
-
-function cleanText(s) {
-
-  s = s.toLowerCase();
-
-  s = stripColors(s);
-
-  return s.replace(/[^a-zA-ZáàéèíìóòúùáàÁÀñÑ0-9 ]+/g, '');
-}
-
-
-function onTextBefore(u, t) {
-  if (restype === false) {
-    var answers = quiztxt[number].substr(2).split("[or]");
-
-    var answer = stripColors(t.toLowerCase());
-
-    for (var o = 0; o < answers.length; o++) {
-      if (answer.indexOf(cleanText(answers[o])) != -1) {
-        if (!u.tstr) {
-          if (points == 1) {
-            print(u, template[16].substring(7).replace(/\x2Bn/gi, u.name));
-
-            u.tstr = true;
-            correct.push(u.name);
-
-            if (u.pts == null) {
-              u.pts = 0;
+    /**
+     * Encuentra el valor máximo en un array
+     * @param {Array} arr - Array de números
+     * @return {number} Valor máximo
+     */
+    findMaxValue: function(arr) {
+        if (!arr || !Array.isArray(arr) || arr.length === 0) {
+            return -1;
+        }
+        
+        var max = arr[0];
+        for (var i = 1; i < arr.length; i++) {
+            if (arr[i] > max) {
+                max = arr[i];
             }
+        }
+        return max;
+    },
 
-            u.pts = u.pts + points;
-          }
-
-          if (points == 2) {
-            print(u, template[15].substring(7).replace(/\x2Bn/gi, u.name));
-            u.tstr = true;
-            correct.push(u.name);
-
-            if (u.pts == null) {
-              u.pts = 0;
+    /**
+     * Reemplaza placeholders en plantilla
+     * @param {string} template - Plantilla con placeholders
+     * @param {Object} replacements - Objeto con reemplazos
+     * @return {string} Texto con reemplazos aplicados
+     */
+    replaceTemplateVars: function(template, replacements) {
+        if (!template || !replacements) return template || '';
+        
+        var result = template;
+        for (var key in replacements) {
+            if (replacements.hasOwnProperty(key)) {
+                var regex = new RegExp('\\x2B' + key, 'gi');
+                result = result.replace(regex, replacements[key]);
             }
-
-            u.pts = u.pts + points;
-            points = points - 1;
-          }
-
-          if (points == 3) {
-            print(u, template[14].substring(7).replace(/\x2Bn/gi, u.name));
-            u.tstr = true;
-            correct.push(u.name);
-
-            if (u.pts == null) {
-              u.pts = 0;
-            }
-
-            u.pts = u.pts + points;
-            points = points - 1;
-          }
         }
-      }
+        return result;
     }
-  }
+};
 
-  return t;
-}
-
-function getScores() {
-  Users.local(function (P) {
-    if (P.pts != null) {
-      PlayersOk++;
-      cpts[PlayersOk - 1] = P.pts;
-    }
-  });
-}
-
-function resetScores() {
-  Users.local(function (P) {
-    if (P.pts != null) {
-      P.pts = 0;
-    }
-  });
-}
-
-function FixTemplate(t) {
-  t = t
-    .replace(/\xEF\xBB\xBF/gi, "")
-    .replace(/\x02\x39/gi, "\x09")
-    .replace(/\x02\x36/gi, "\x06")
-    .replace(/\x02\x37/gi, "\x07")
-    .replace(/\x02\x33/gi, "\x03")
-    .replace(/\x02\x35/gi, "\x05");
-  return t;
-}
-
-function findMax(arr) {
-  return !arr ? -1 : eval("Math.max(" + arr + ")");
-}
-
-function onTimer() {
-  if (quizon) {
-    if (quiztimer >= 20 && number >= quizend) {
-      print(0, "");
-      print(0, template[17].substring(7));
-      print(0, "");
-      quiztimer = 0;
-      restype = true;
-      number = 0;
-      qcount = 1;
-      quizon = false;
-      getScores();
-      /* latest fix..
-var arr = [11,2,3,565,53,2,955,15846,9898568,184845]; Users.local(function(i){ if(i.pts == eval("Math.max("+arr+")")){ print(i.name+" winner");}});
-*/
-      //var ws = Math.max(cpts[0], cpts[1], cpts[2], cpts[3], cpts[4], cpts[5], cpts[6], cpts[7], cpts[8], cpts[9], cpts[10], cpts[11], cpts[12], cpts[13], cpts[14], cpts[15], cpts[16], cpts[17], cpts[18], cpts[19], cpts[20], cpts[21], cpts[22], cpts[23], cpts[24], cpts[25]); old
-      var ws = findMax(cpts); //new
-
-      if (PlayersOk < 1) {
-        print(0, "");
-        print(0, template[18].substring(7));
-        print(0, "");
-
-        splayers = false;
-      }
-
-      if (splayers) {
-        print(0, "");
-
-        Users.local(function (d) {
-          if (d.pts > 0 && d.pts != null) {
-            print(
-              0,
-              template[19]
-                .substring(7)
-                .replace(/\x2Bn/gi, d.name)
-                .replace(/\x2Bp/gi, d.pts)
-            );
-          }
-        });
-        print(0, "");
-      }
-
-      Users.local(function (k) {
-        //get the winner
-        if (k.pts == ws) {
-          wn = k.name;
-          dn = wn;
-        }
-      });
-
-      Users.local(function (x) {
-        //if game is a draw
-        if (x.pts == ws && x.name != wn) {
-          dn = dn + " & " + x.name;
-        }
-      });
-
-      if (splayers) {
-        for (var fl = 0; fl < 5; fl++) {
-          print(
-            0,
-            template[20].substring(7).replace(/\x2Bn/gi, dn).replace(/\x2Bp/gi, ws)
-          );
-        }
-      }
-    }
-
-    if (quiztimer >= 20 && !restype) {
-      var thisanswer = quiztxt[number]
-        .substr(2)
-        .replace(/\x5B\x6F\x72\x5D/gi, " " + template[6].substring(7) + " ");
-      print(0, "");
-      print(0, template[9].substring(7));
-      print(0, "");
-      print(0, template[10].substring(7).replace(/\x2Ba/gi, thisanswer));
-
-      quiztimer = 0;
-      restype = true;
-      number++;
-      qcount++;
-      points = 3;
-
-      if (correct.length > 0) {
-        print(0, "");
-        print(0, template[11].substring(7));
-        print(0, "");
-      }
-
-      if (correct.length < 1) {
-        print(0, "");
-        print(0, template[12].substring(7));
-        print(0, "");
-      }
-
-      for (var i = 0; i < correct.length; i++) {
-        if (i == 0) {
-          print(
-            0,
-            template[13]
-              .substring(7)
-              .replace(/\x2Bn/gi, correct[i])
-              .replace(/\x2Bp/gi, "3")
-          );
-        }
-        if (i == 1) {
-          print(
-            0,
-            template[13]
-              .substring(7)
-              .replace(/\x2Bn/gi, correct[i])
-              .replace(/\x2Bp/gi, "2")
-          );
-        }
-        if (i > 1) {
-          print(
-            0,
-            template[13]
-              .substring(7)
-              .replace(/\x2Bn/gi, correct[i])
-              .replace(/\x2Bp/gi, "1")
-          );
-        }
-      }
-    }
-
-    if (quiztimer >= 20 && restype) {
-      if (quiztxt[number] != "") {
-        print(0, "");
-        print(
-          0,
-          template[7]
-            .substring(7)
-            .replace(/\x2Bx/gi, qcount)
-            .replace(/\x2By/gi, quiztxt.length / 2)
-        );
-        print(0, "");
-        var imgs = quiztxt[number].substring(2).split("###");
-        if (imgs.length == 1) {
-          print(
-            0,
-            template[8].substr(7).replace(/\x2Bq/gi, quiztxt[number].substr(2))
-          );
-          print(0, "");
-        } else {
-          var scribble = new Scribble();
-          scribble.src = imgs[1];
-          scribble.oncomplete = scribbleReceived;
-          scribble.download(template[8].substr(7).replace(/\x2Bq/gi, imgs[0]));
-        }
-        quiztimer = 0;
-        restype = false;
-        number++;
-        correct = new Array();
-
-        Users.local(function (c) {
-          c.tstr = false;
-        });
-      }
-
-      if (quiztxt[number] == "") {
-        quiztimer = 20;
-        number = quizend + 1;
-      }
-    }
-  }
-
-  quiztimer++;
-}
-
-function scribbleReceived(e) {
-  if (e) {
-    var scribble = this;
-    var name = this.arg;
-
-    Users.local(function (u) {
-      u.scribble(scribble);
-
-      print(u, name);
-
-      print(u, "");
-    });
-  }
-}
-
-function onCommand(u, cmd, tu, ex) {
-  //if (cmd == "xd") {
-
-  //for (var w = 0; w < template.length; w++) {
-  // print(template[w]);
-
-  //}
-
-  //}
-
-  if (cmd.toLowerCase().search("game quiz") == 0 && u.level > 0) {
-    if (cmd.toLowerCase().substring(10) == "start") {
-      if (quizon) {
-        // game in progress
-      }
-      if (!quizon) {
+// Manejo de archivos
+var QuizFileManager = {
+    /**
+     * Carga preguntas desde archivo
+     */
+    loadQuestions: function() {
         try {
-          quiztxt = File.load("quiz.txt").split("\n");
+            QuizState.questions = File.load(QuizConfig.QUIZ_FILE).split("\n");
         } catch (e) {
-          quiztxt = new Array();
+            QuizState.questions = [];
+            print(0, "Error loading quiz file: " + e.message);
         }
-        if (quiztxt[0] != null) {
-          print(0, template[4].substring(7).replace(/\x2Bn/gi, u.name));
-          quiztimer = 0;
-          number = 0;
-          quizend = quiztxt.length;
-          qcount = 1;
-          restype = true;
-          correct = new Array();
-          points = 3;
-          quizon = true;
-          splayers = true;
-          wn = "";
-          dn = "";
-          PlayersOk = 0;
-          cpts = new Array();
-          for (var calc = 0; calc < 100; calc++) {
-            cpts[calc] = 0;
-          }
-          resetScores(); //clear past scores
-        } else {
-          print(
-            0,
-            template[3].substring(7).replace(/\x2Bn/gi, u.name) +
-              " - \x5CScripting\x5C" +
-              scriptName() +
-              "\x5CData\x5Cquiz.txt"
-          );
+
+        if (QuizState.questions.length < 1) {
+            this.createDefaultQuestions();
         }
-        Users.local(function (m) {
-          if (m.tstr) {
-            m.pts = 0;
-            m.tstr = false;
-          }
+    },
+
+    /**
+     * Crea preguntas por defecto
+     */
+    createDefaultQuestions: function() {
+        QuizState.questions = [
+            "Q:Example question",
+            "A:Example answer[or]Answer Example"
+        ];
+
+        try {
+            File.save(QuizConfig.QUIZ_FILE, QuizState.questions.join("\r\n"));
+            print(0, "quiz.txt has been created at: \\Scripting\\" + scriptName() + "\\Data\\quiz.txt");
+        } catch (e) {
+            print(0, "Error creating quiz file: " + e.message);
+        }
+    },
+
+    /**
+     * Carga plantillas desde archivo
+     */
+    loadTemplate: function() {
+        try {
+            QuizState.template = File.load(QuizConfig.TEMPLATE_FILE).split("\n");
+        } catch (e) {
+            QuizState.template = [];
+            print(0, "Error loading template file: " + e.message);
+        }
+
+        if (QuizState.template.length < 1) {
+            this.createDefaultTemplate();
+        }
+
+        // Procesar plantillas
+        for (var i = 0; i < QuizState.template.length; i++) {
+            QuizState.template[i] = QuizUtils.fixTemplate(QuizState.template[i]);
+        }
+    },
+
+    /**
+     * Crea plantilla por defecto
+     */
+    createDefaultTemplate: function() {
+        QuizState.template = [
+            "███████",
+            "[QUIZ]█",
+            "███████",
+            "string=\x0314Por favor primero cargue algunas preguntas",
+            "string=\x0314Trivia ha sido iniciada por \x0310+n\x0314 - buena suerte!! :P",
+            "string=\x0314Trivia detenida por \x0310+n",
+            "string=\x0301Ó",
+            "string=\x0314Pregunta \x0310+x \x0314de \x0310+y",
+            "string=\x0301(I) +q",
+            "string=\x0314Tiempo fuera!!",
+            "string=\x0314La Respuesta era: \x0310+a",
+            "string=\x0314Estas personas contestaron bien:",
+            "string=\x0314(N) Nadie ha respondido correctamente (N)",
+            "string=(H)\x0310 +n \x0315[\x0301+p \x0314points\x0315]",
+            "string=\x0314Bien hecho \x0310+n\x0314, has contestado primero!! :)",
+            "string=\x0314Bien hecho \x0310+n\x0314, has contestado segundo!! :)",
+            "string=\x0314Bien hecho \x0310+n\x0314, has contestado correctamente!! :)",
+            "string=\x0314La trivia ha finalizado - aquí están los resultados finales!!",
+            "string=\x0314(N) Nadie ha contestado ninguna pregunta correctamente (N)",
+            "string=\x0310+n \x0314recibió \x0301+p \x0314puntos",
+            "string=(H) (H) (H) \x0310+n \x0314ha ganado el juego con \x0301+p \x0314puntos!! (H) (H) (H)"
+        ];
+
+        try {
+            File.save(QuizConfig.TEMPLATE_FILE, QuizState.template.join("\r\n"));
+            print(0, "quiz_template.ini template has been created successfully");
+        } catch (e) {
+            print(0, "Error creating template file: " + e.message);
+        }
+    }
+};
+
+// Manejo de jugadores
+var QuizPlayerManager = {
+    /**
+     * Obtiene puntuaciones de jugadores
+     */
+    getScores: function() {
+        QuizState.playersWithPoints = 0;
+        QuizState.playerPoints = [];
+        
+        for (var i = 0; i < QuizConfig.MAX_PLAYERS; i++) {
+            QuizState.playerPoints[i] = 0;
+        }
+
+        Users.local(function(player) {
+            if (player.pts != null && player.pts > 0) {
+                QuizState.playerPoints[QuizState.playersWithPoints] = player.pts;
+                QuizState.playersWithPoints++;
+            }
         });
-      }
+    },
+
+    /**
+     * Reinicia puntuaciones
+     */
+    resetScores: function() {
+        Users.local(function(player) {
+            player.pts = 0;
+            player.tstr = false;
+        });
+    },
+
+    /**
+     * Otorga puntos a un jugador
+     * @param {Object} user - Usuario
+     * @param {number} points - Puntos a otorgar
+     */
+    awardPoints: function(user, points) {
+        if (!user.pts) {
+            user.pts = 0;
+        }
+        user.pts += points;
+        user.tstr = true;
+        QuizState.correctAnswers.push(user.name);
+    },
+
+    /**
+     * Verifica si la respuesta es correcta
+     * @param {string} userAnswer - Respuesta del usuario
+     * @param {Array} correctAnswers - Respuestas correctas
+     * @return {boolean} Verdadero si es correcta
+     */
+    isAnswerCorrect: function(userAnswer, correctAnswers) {
+        var cleanUserAnswer = QuizUtils.cleanText(userAnswer);
+        
+        for (var i = 0; i < correctAnswers.length; i++) {
+            var cleanCorrectAnswer = QuizUtils.cleanText(correctAnswers[i]);
+            if (cleanUserAnswer.indexOf(cleanCorrectAnswer) !== -1) {
+                return true;
+            }
+        }
+        return false;
     }
-    if (cmd.toLowerCase().substring(10) == "stop") {
-      if (!quizon) {
-        // no game in progress
-      } else {
-        print(0, template[5].substring(7).replace(/\x2Bn/gi, u.name));
-        quizon = false;
-      }
+};
+
+// Controlador principal del juego
+var QuizGameController = {
+    /**
+     * Inicia el juego
+     * @param {Object} user - Usuario que inicia el juego
+     */
+    startGame: function(user) {
+        if (QuizState.gameActive) {
+            print(0, "El juego ya está en progreso");
+            return;
+        }
+
+        QuizFileManager.loadQuestions();
+        
+        if (!QuizState.questions[0]) {
+            var message = QuizUtils.replaceTemplateVars(
+                QuizState.template[3].substring(7), 
+                {n: user.name}
+            );
+            print(0, message + " - \\Scripting\\" + scriptName() + "\\Data\\quiz.txt");
+            return;
+        }
+
+        // Inicializar estado del juego
+        this.initializeGameState();
+        
+        var startMessage = QuizUtils.replaceTemplateVars(
+            QuizState.template[4].substring(7),
+            {n: user.name}
+        );
+        print(0, startMessage);
+        
+        QuizPlayerManager.resetScores();
+    },
+
+    /**
+     * Detiene el juego
+     * @param {Object} user - Usuario que detiene el juego
+     */
+    stopGame: function(user) {
+        if (!QuizState.gameActive) {
+            print(0, "No hay juego en progreso");
+            return;
+        }
+
+        var stopMessage = QuizUtils.replaceTemplateVars(
+            QuizState.template[5].substring(7),
+            {n: user.name}
+        );
+        print(0, stopMessage);
+        
+        QuizState.gameActive = false;
+    },
+
+    /**
+     * Inicializa el estado del juego
+     */
+    initializeGameState: function() {
+        QuizState.timer = 0;
+        QuizState.currentQuestionIndex = 0;
+        QuizState.totalQuestions = QuizState.questions.length;
+        QuizState.currentQuestion = 1;
+        QuizState.waitingForAnswer = true;
+        QuizState.correctAnswers = [];
+        QuizState.currentPoints = QuizConfig.DEFAULT_POINTS;
+        QuizState.gameActive = true;
+        QuizState.showPlayers = true;
+        QuizState.winnerName = "";
+        QuizState.drawNames = "";
+        QuizState.playersWithPoints = 0;
+        QuizState.playerPoints = [];
+        
+        for (var i = 0; i < QuizConfig.MAX_PLAYERS; i++) {
+            QuizState.playerPoints[i] = 0;
+        }
+    },
+
+    /**
+     * Procesa el final del juego
+     */
+    processGameEnd: function() {
+        print(0, "");
+        print(0, QuizState.template[17].substring(7));
+        print(0, "");
+        
+        this.resetGameState();
+        QuizPlayerManager.getScores();
+        
+        var maxScore = QuizUtils.findMaxValue(QuizState.playerPoints);
+        
+        if (QuizState.playersWithPoints < 1) {
+            print(0, "");
+            print(0, QuizState.template[18].substring(7));
+            print(0, "");
+            QuizState.showPlayers = false;
+        }
+
+        if (QuizState.showPlayers) {
+            this.displayFinalScores();
+            this.displayWinners(maxScore);
+        }
+    },
+
+    /**
+     * Muestra puntuaciones finales
+     */
+    displayFinalScores: function() {
+        print(0, "");
+        
+        Users.local(function(player) {
+            if (player.pts > 0) {
+                var scoreMessage = QuizUtils.replaceTemplateVars(
+                    QuizState.template[19].substring(7),
+                    {n: player.name, p: player.pts}
+                );
+                print(0, scoreMessage);
+            }
+        });
+        
+        print(0, "");
+    },
+
+    /**
+     * Muestra ganadores
+     * @param {number} maxScore - Puntuación máxima
+     */
+    displayWinners: function(maxScore) {
+        var winners = [];
+        
+        Users.local(function(player) {
+            if (player.pts === maxScore) {
+                winners.push(player.name);
+            }
+        });
+
+        if (winners.length > 0) {
+            var winnerText = winners.join(" & ");
+            var winMessage = QuizUtils.replaceTemplateVars(
+                QuizState.template[20].substring(7),
+                {n: winnerText, p: maxScore}
+            );
+            
+            for (var i = 0; i < 5; i++) {
+                print(0, winMessage);
+            }
+        }
+    },
+
+    /**
+     * Reinicia estado del juego
+     */
+    resetGameState: function() {
+        QuizState.timer = 0;
+        QuizState.waitingForAnswer = true;
+        QuizState.currentQuestionIndex = 0;
+        QuizState.currentQuestion = 1;
+        QuizState.gameActive = false;
+    },
+
+    /**
+     * Procesa timeout de pregunta
+     */
+    processQuestionTimeout: function() {
+        var currentAnswer = QuizState.questions[QuizState.currentQuestionIndex]
+            .substr(2)
+            .replace(/\[or\]/gi, " " + QuizState.template[6].substring(7) + " ");
+        
+        print(0, "");
+        print(0, QuizState.template[9].substring(7)); // Tiempo fuera
+        print(0, "");
+        
+        var answerMessage = QuizUtils.replaceTemplateVars(
+            QuizState.template[10].substring(7),
+            {a: currentAnswer}
+        );
+        print(0, answerMessage);
+
+        this.displayCorrectAnswers();
+        this.prepareNextQuestion();
+    },
+
+    /**
+     * Muestra respuestas correctas
+     */
+    displayCorrectAnswers: function() {
+        print(0, "");
+        
+        if (QuizState.correctAnswers.length > 0) {
+            print(0, QuizState.template[11].substring(7));
+            print(0, "");
+            
+            for (var i = 0; i < QuizState.correctAnswers.length; i++) {
+                var points = i === 0 ? "3" : (i === 1 ? "2" : "1");
+                var playerMessage = QuizUtils.replaceTemplateVars(
+                    QuizState.template[13].substring(7),
+                    {n: QuizState.correctAnswers[i], p: points}
+                );
+                print(0, playerMessage);
+            }
+        } else {
+            print(0, QuizState.template[12].substring(7));
+            print(0, "");
+        }
+    },
+
+    /**
+     * Prepara siguiente pregunta
+     */
+    prepareNextQuestion: function() {
+        QuizState.timer = 0;
+        QuizState.waitingForAnswer = true;
+        QuizState.currentQuestionIndex++;
+        QuizState.currentQuestion++;
+        QuizState.currentPoints = QuizConfig.DEFAULT_POINTS;
+    },
+
+    /**
+     * Muestra pregunta actual
+     */
+    displayCurrentQuestion: function() {
+        if (QuizState.questions[QuizState.currentQuestionIndex] === "") {
+            QuizState.timer = QuizConfig.QUESTION_TIMEOUT;
+            QuizState.currentQuestionIndex = QuizState.totalQuestions + 1;
+            return;
+        }
+
+        print(0, "");
+        
+        var questionHeader = QuizUtils.replaceTemplateVars(
+            QuizState.template[7].substring(7),
+            {x: QuizState.currentQuestion, y: Math.floor(QuizState.questions.length / 2)}
+        );
+        print(0, questionHeader);
+        print(0, "");
+
+        var questionParts = QuizState.questions[QuizState.currentQuestionIndex].substring(2).split("###");
+        
+        if (questionParts.length === 1) {
+            var questionText = QuizUtils.replaceTemplateVars(
+                QuizState.template[8].substr(7),
+                {q: QuizState.questions[QuizState.currentQuestionIndex].substr(2)}
+            );
+            print(0, questionText);
+            print(0, "");
+        } else {
+            this.handleImageQuestion(questionParts);
+        }
+
+        this.prepareForAnswers();
+    },
+
+    /**
+     * Maneja preguntas con imágenes
+     * @param {Array} questionParts - Partes de la pregunta
+     */
+    handleImageQuestion: function(questionParts) {
+        var scribble = new Scribble();
+        scribble.src = questionParts[1];
+        scribble.oncomplete = scribbleReceived;
+        
+        var questionText = QuizUtils.replaceTemplateVars(
+            QuizState.template[8].substr(7),
+            {q: questionParts[0]}
+        );
+        scribble.download(questionText);
+    },
+
+    /**
+     * Prepara para recibir respuestas
+     */
+    prepareForAnswers: function() {
+        QuizState.timer = 0;
+        QuizState.waitingForAnswer = false;
+        QuizState.currentQuestionIndex++;
+        QuizState.correctAnswers = [];
+
+        Users.local(function(player) {
+            player.tstr = false;
+        });
     }
-  }
+};
+
+// Eventos del juego
+
+/**
+ * Procesa texto antes de mostrarlo (para respuestas)
+ */
+function onTextBefore(user, text) {
+    if (QuizState.waitingForAnswer || !QuizState.gameActive) {
+        return text;
+    }
+
+    var answers = QuizState.questions[QuizState.currentQuestionIndex - 1].substr(2).split("[or]");
+    
+    if (QuizPlayerManager.isAnswerCorrect(text, answers) && !user.tstr) {
+        var messageIndex;
+        
+        if (QuizState.currentPoints === QuizConfig.POINTS_STRUCTURE.FIRST) {
+            messageIndex = 14;
+        } else if (QuizState.currentPoints === QuizConfig.POINTS_STRUCTURE.SECOND) {
+            messageIndex = 15;
+        } else {
+            messageIndex = 16;
+        }
+        
+        var congratsMessage = QuizUtils.replaceTemplateVars(
+            QuizState.template[messageIndex].substring(7),
+            {n: user.name}
+        );
+        print(user, congratsMessage);
+        
+        QuizPlayerManager.awardPoints(user, QuizState.currentPoints);
+        
+        if (QuizState.currentPoints > 1) {
+            QuizState.currentPoints--;
+        }
+    }
+
+    return text;
 }
 
-function onHelp(u) {
-  if (u.level > 0) {
-    print(u, "#game quiz <start | stop>");
-  }
+/**
+ * Timer principal del juego
+ */
+function onTimer() {
+    if (!QuizState.gameActive) {
+        return;
+    }
+
+    // Fin del juego
+    if (QuizState.timer >= QuizConfig.QUESTION_TIMEOUT && 
+        QuizState.currentQuestionIndex >= QuizState.totalQuestions) {
+        QuizGameController.processGameEnd();
+        return;
+    }
+
+    // Timeout de pregunta
+    if (QuizState.timer >= QuizConfig.QUESTION_TIMEOUT && !QuizState.waitingForAnswer) {
+        QuizGameController.processQuestionTimeout();
+        return;
+    }
+
+    // Mostrar nueva pregunta
+    if (QuizState.timer >= QuizConfig.QUESTION_TIMEOUT && QuizState.waitingForAnswer) {
+        QuizGameController.displayCurrentQuestion();
+        return;
+    }
+
+    QuizState.timer++;
 }
+
+/**
+ * Maneja imágenes recibidas
+ */
+function scribbleReceived(success) {
+    if (success) {
+        var scribble = this;
+        var questionName = this.arg;
+
+        Users.local(function(user) {
+            user.scribble(scribble);
+            print(user, questionName);
+            print(user, "");
+        });
+    }
+}
+
+/**
+ * Maneja comandos del juego
+ */
+function onCommand(user, command, targetUser, extra) {
+    var cmd = command.toLowerCase();
+    
+    if (cmd.indexOf("game quiz") === 0 && user.level > 0) {
+        var action = cmd.substring(10);
+        
+        if (action === "start") {
+            QuizGameController.startGame(user);
+        } else if (action === "stop") {
+            QuizGameController.stopGame(user);
+        }
+    }
+}
+
+/**
+ * Muestra ayuda del comando
+ */
+function onHelp(user) {
+    if (user.level > 0) {
+        print(user, "#game quiz <start | stop>");
+    }
+}
+
+// Inicialización
+QuizFileManager.loadQuestions();
+QuizFileManager.loadTemplate();
