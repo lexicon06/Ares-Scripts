@@ -1,0 +1,40 @@
+Q:¿Cuál es la capital de España?
+A:Madrid[or]madrid
+Q:¿En qué año llegó Cristóbal Colón a América?
+A:1492[or]mil cuatrocientos noventa y dos
+Q:¿Cuál es el planeta más grande del sistema solar?
+A:Júpiter[or]jupiter
+Q:¿Quién escribió "Don Quijote de la Mancha"?
+A:Miguel de Cervantes[or]Cervantes[or]miguel cervantes
+Q:¿Cuál es el océano más grande del mundo?
+A:Pacífico[or]Océano Pacífico[or]oceano pacifico
+Q:¿Cuántos continentes hay en el mundo?
+A:7[or]siete[or]Siete continentes
+Q:¿Cuál es el río más largo del mundo?
+A:Nilo[or]Río Nilo[or]rio nilo
+Q:¿En qué país se encuentra Machu Picchu?
+A:Perú[or]peru
+Q:¿Cuál es el elemento químico más abundante en el universo?
+A:Hidrógeno[or]hidrogeno[or]H
+Q:¿Quién pintó la Mona Lisa?
+A:Leonardo da Vinci[or]da Vinci[or]leonardo[or]davinci
+Q:¿Cuál es la montaña más alta del mundo?
+A:Everest[or]Monte Everest[or]monte everest
+Q:¿En qué año terminó la Segunda Guerra Mundial?
+A:1945[or]mil novecientos cuarenta y cinco
+Q:¿Cuál es la moneda de Reino Unido?
+A:Libra[or]Libra Esterlina[or]libra esterlina[or]pounds
+Q:¿Cuántos huesos tiene el cuerpo humano adulto?
+A:206[or]doscientos seis
+Q:¿Cuál es el idioma más hablado del mundo?
+A:Chino[or]Chino Mandarín[or]mandarin[or]chino mandarin
+Q:¿En qué ciudad se encuentra la Torre Eiffel?
+A:París[or]paris
+Q:¿Cuál es el metal más liviano?
+A:Litio[or]litio
+Q:¿Quién desarrolló la teoría de la relatividad?
+A:Einstein[or]Albert Einstein[or]alberto einstein
+Q:¿Cuál es el desierto más grande del mundo?
+A:Sahara[or]Desierto del Sahara[or]desierto sahara
+Q:¿En qué año cayó el Muro de Berlín?
+A:1989[or]mil novecientos ochenta y nueve
