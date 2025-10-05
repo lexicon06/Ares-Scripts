@@ -1,3 +1,10 @@
+// TODO
+/*
+FIX THE BACKGROUND COLORS
+SOME ICONS DOES NOT SHOW CORRECTLY EG :s
+*/
+
+
 // ============================================================
 // Color table matching Helpers.cs color mapping (declare once)
 // ============================================================
