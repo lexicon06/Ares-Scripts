@@ -1,3 +1,5 @@
+//TODO FIX SOME BG COLORS AND SPACES
+
 // ============================================================  
 // Color table matching Helpers.cs color mapping (declare once)  
 // ============================================================  
