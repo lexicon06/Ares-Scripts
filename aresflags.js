@@ -102,9 +102,6 @@ function convertAresFormattingToHTML(text) {
 // ============================================================  
 // Convert Unicode emojis → Twemoji PNGs (better flag support)  
 // ============================================================  
-// ============================================================  
-// Convert Unicode emojis → Twemoji PNGs (better flag support)  
-// ============================================================  
 function convertEmojisToImages(text) {  
     var result = "";  
     var i = 0;  
@@ -165,17 +162,20 @@ function convertEmojisToImages(text) {
   
     return result;  
 }
-  
+
 function flagCallback(e) {  
     if (!e) return;  
   
     try {  
         var data = JSON.parse(this.page);  
-        var emojis = ["😂", "🤖", "🎩", "🦄", "🔥", "💀", "🍕", "🚀", "🐉", "🎸"];  
-        var separator = emojis[Math.floor(Math.random() * emojis.length)];  
+        var emojis = ["\uD83D\uDE02", "\uD83E\uDD16", "\uD83C\uDFA9", "\uD83E\uDD84", "\uD83D\uDD25", "\uD83D\uDC80", "\uD83C\uDF55", "\uD83D\uDE80", "\uD83D\uDC09", "\uD83C\uDFB8"];  
+        var userId = parseInt(this.arg);  
+        user(userId).pais = data.country;  
+        var separator = "\x0304♥\x0301";  
+        if (user(userId).vroom != 0) { return ""; }  
+        
+        var message = "\x0301" + getCountryFlag(data.countryCode) + " " + data.country + " " + separator + " " + data.city;  
   
-        var message = `\x0301${getCountryFlag(data.countryCode)} ${data.country} ${separator} ${data.city}`;  
-          
         // Send to all users in the room  
         Users.local(function(i) {  
             if (i.canHTML) {  
@@ -197,12 +197,92 @@ function getCountryFlag(countryCode) {
   
     countryCode = countryCode.toUpperCase();  
     var flag = "";  
-  
+
     for (var i = 0; i < countryCode.length; i++) {  
         flag += String.fromCodePoint(127397 + countryCode.charCodeAt(i));  
     }  
   
     return flag;  
+}  
+
+// ============================================================  
+// Command Handlers  
+// ============================================================  
+function onCommand(userobj, command) {  
+    if (command == "ids" && userobj.level > 0) {  
+        // First collect all users into an array  
+        var users = [];  
+        Users.local(function(i) {  
+            users.push(i);  
+        });  
+        
+        // Sort all users by ID (ascending)  
+        users.sort(function(a, b) {  
+            return a.id - b.id;  
+        });  
+        
+        // Send the information  
+        for (var j = 0; j < users.length; j++) {  
+            var i = users[j];
+            var pais = i.pais == null ? "Desconocido" : i.pais;  
+            var adminIndicator = i.level > 0 ? " ( ADMIN )" : "";  
+            var msg = "ID: \x06" + i.id + "\x06, \x06" + adminIndicator + "\x06 Nick: \x06" + i.name;  
+            sendPM(userobj, Room.botName, msg);  
+        }  
+    }  
+	
+    if (command == "adm" && userobj.level > 0) {  
+        var admins = [];  
+        Users.local(function(i) {  
+            if (i.level > 0) {  
+                admins.push(i);  
+            }  
+        });  
+        
+        // Sort admins by ID (ascending)  
+        admins.sort(function(a, b) {  
+            return a.id - b.id;  
+        });  
+        
+        // Send the information  
+        if (admins.length === 0) {  
+            sendPM(userobj, Room.botName, "No hay administradores conectados.");  
+            return;  
+        }  
+        
+        for (var k = 0; k < admins.length; k++) {  
+            var i = admins[k];
+            var msg = "ID: \x06" + i.id + "\x06, Nick: \x06" + i.name + "\x06 ( ADMIN )";  
+            sendPM(userobj, Room.botName, msg);  
+        }  
+    }  
+	
+    if (command == "users" && userobj.level > 0) {  
+        var regularUsers = [];  
+        Users.local(function(i) {  
+            if (i.level === 0) {  
+                regularUsers.push(i);  
+            }  
+        });  
+        
+        // Sort regular users by ID (ascending)  
+        regularUsers.sort(function(a, b) {  
+            return a.id - b.id;  
+        });  
+        
+        // Send the information  
+        if (regularUsers.length === 0) {  
+            sendPM(userobj, Room.botName, "No hay usuarios regulares conectados.");  
+            return;  
+        }  
+        
+        for (var l = 0; l < regularUsers.length; l++) {  
+            var i = regularUsers[l];
+            var pais = i.pais == null ? "Desconocido" : i.pais;  
+            var msg = "ID: \x06" + i.id + "\x06, Nick: \x06" + i.name + "\x06, PAIS: \x06" + pais + "\x06";  
+            sendPM(userobj, Room.botName, msg);  
+        }  
+    }  
 }  
   
 function onJoinCheck(u) {  
@@ -210,9 +290,11 @@ function onJoinCheck(u) {
   
     var flag = new HttpRequest();  
     flag.utf = true;  
-    flag.src = `http://ip-api.com/json/${encodeURIComponent(u.externalIp)}`;  
+    flag.src = "http://ip-api.com/json/" + encodeURIComponent(u.externalIp);  
     flag.oncomplete = flagCallback;  
+    flag.arg = u.id;
     flag.download();  
+    u.pais = null;  
   
     return true;  
 }
