@@ -210,8 +210,13 @@ function convertAresFormattingToHTML(text) {
   
         // Underline toggle  
         if (c === '\x07') {  
-            underlineOpen = !underlineOpen;  
-            result += underlineOpen ? '<u>' : '</u>';  
+            if (underlineOpen) {
+                result += '</span>';
+                underlineOpen = false;
+            } else {
+                result += '<span style="text-decoration:underline;">';
+                underlineOpen = true;
+            }
             i++;  
             continue;  
         }  
@@ -221,7 +226,7 @@ function convertAresFormattingToHTML(text) {
             if (fontOpen) { result += '</font>'; fontOpen = false; }  
             if (bgSpanOpen) { result += '</span>'; bgSpanOpen = false; }  
             if (boldOpen) { result += '</b>'; boldOpen = false; }  
-            if (underlineOpen) { result += '</u>'; underlineOpen = false; }  
+            if (underlineOpen) { result += '</span>'; underlineOpen = false; }  
             i++;  
             continue;  
         }  
@@ -232,7 +237,7 @@ function convertAresFormattingToHTML(text) {
   
     // Close any open tags  
     if (boldOpen) result += '</b>';  
-    if (underlineOpen) result += '</u>';  
+    if (underlineOpen) result += '</span>';  
     if (fontOpen) result += '</font>';  
     if (bgSpanOpen) result += '</span>';  
   
