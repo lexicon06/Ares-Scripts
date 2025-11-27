@@ -1,5 +1,7 @@
 //TODO FIX SOME BG COLORS AND SPACES
 
+const { use } = require("react");
+
 // ============================================================  
 // Color table matching Helpers.cs color mapping (declare once)  
 // ============================================================  
@@ -19,6 +21,32 @@ var colorTable = [
 // ============================================================  
 function onTextBefore(userobj, text) {  
     var hasHTMLClients = false;  
+
+
+    var clearText = stripColors(text);  
+    var words = clearText.split(" ");  
+      
+    for (var i = 0; i < words.length; i++) {  
+        var u = words[i];  
+          
+        if (/\.(jpe?g|png|gif)(\?.*)?$/i.test(u)) {  
+            var imgHTML = "<img src='" + u + "' style='max-width:50%; height:auto; border:1px solid #ccc;'>";  
+              
+            // Create timer with 2 second delay (2000ms)  
+            var timer = new Timer();  
+            timer.interval = 2000; // 2 second delay  
+            timer.oncomplete = function() {  
+                Users.local(function(i) {  
+                    if (i.canHTML && i.vroom === userobj.vroom) {  
+                        print(i, "Image sent by "+userobj.name);
+                        i.sendHTML(imgHTML);  
+                    }  
+                });  
+                timer.stop(); // Clean up timer after execution  
+            };  
+            timer.start();  
+        }  
+    }  
   
     Users.local(function(i) {  
         if (i.canHTML && i.vroom === userobj.vroom) {  
@@ -37,14 +65,12 @@ function onTextBefore(userobj, text) {
         htmlContent = convertAresFormattingToHTML(userobj.customName + text);  
         htmlContent = convertEmoticonsToImages(htmlContent);  
         htmlContent = convertEmojisToImages(htmlContent);  
-        htmlContent = convertImageURLsToImages(htmlContent);  
         plainContent = userobj.customName + text;  
     } else {  
         htmlContent = '<font color="#000000">' + userobj.name + '> </font>';  
         var htmlText = convertAresFormattingToHTML(text);  
         htmlText = convertEmoticonsToImages(htmlText);  
         htmlText = convertEmojisToImages(htmlText);  
-        htmlText = convertImageURLsToImages(htmlText);  
         htmlContent += htmlText;  
   
         plainContent = "\x0301" + userobj.name + "> " + text;  
@@ -64,44 +90,24 @@ function onTextBefore(userobj, text) {
 }  
   
 // ============================================================  
-// Convert image URLs to embedded images  
-// ============================================================  
-function convertImageURLsToImages(text) {  
-    var words = text.split(" ");  
-    var result = [];  
-    
-    for (var i = 0; i < words.length; i++) {  
-        var word = words[i];  
-        
-        // Test if word is an image URL  
-        if (/\.(jpe?g|png|gif|bmp|webp)(\?.*)?$/i.test(word)) {  
-            result.push('<img src="' + word + '" style="max-width:50%; height:auto; border:1px solid #ccc; vertical-align:bottom;" />');  
-        } else {  
-            result.push(word);  
-        }  
-    }  
-    
-    return result.join(" ");  
-}  
-
-// ============================================================  
 // Convert Ares emoticons → images  
 // ============================================================  
 function convertEmoticonsToImages(text) {  
-    var ems = [  
-        // Canonical 46 (original hyphenated / uppercase where applicable)  
-        ":-)", ":-D", ";-)", ":-O", ":-P", "(H)", ":@", ":-$",  
-        ":-S", ":-(", ":'(", ":-|", "(6)", "(A)", "(L)", "(U)",  
-        "(M)", "(@)", "(&)", "(S)", "(*)", "(~)", "(E)", "(8)",  
-        "(F)", "(W)", "(O)", "(K)", "(G)", "(^)", "(P)", "(I)",  
-        "(C)", "(T)", "({)", "(})", "(B)", "(D)", "(Z)", "(X)",  
-        "(Y)", "(N)", ":-[", "(1)", "(2)", "(3)", "(4)",  
-        // Common variants without hyphens / lowercase variants  
-        ":)", ":D", ";)", ":O", ":P", ":(", ":S", ":s", ":-s", ":|", ":[", ":$",  
-        "(x)", "(i)", "(a)", "(l)", "(u)", "(m)", "(s)", "(e)",  
-        "(f)", "(w)", "(o)", "(k)", "(g)", "(p)", "(c)", "(t)",  
-        "(b)", "(d)", "(z)", "(y)", "(n)", "(h)"  
-    ];
+var ems = [  
+    // Canonical 46 (original hyphenated / uppercase where applicable)  
+    ":-)", ":-D", ";-)", ":-O", ":-P", "(H)", ":@", ":-$",  
+    ":-S", ":-(", ":'(", ":-|", "(6)", "(A)", "(L)", "(U)",  
+    "(M)", "(@)", "(&)", "(S)", "(*)", "(~)", "(E)", "(8)",  
+    "(F)", "(W)", "(O)", "(K)", "(G)", "(^)", "(P)", "(I)",  
+    "(C)", "(T)", "({)", "(})", "(B)", "(D)", "(Z)", "(X)",  
+    "(Y)", "(N)", ":-[", "(1)", "(2)", "(3)", "(4)",  
+ // Common variants without hyphens / lowercase variants  
+    ":)", ":D", ";)", ":O", ":o", ":P", ":p", ":(", ":S", ":s", ":-s", ":|", ":[", ":$",  
+    "(x)", "(i)", "(a)", "(l)", "(u)", "(m)", "(s)", "(e)",  
+    "(f)", "(w)", "(o)", "(k)", "(g)", "(p)", "(c)", "(t)",  
+    "(b)", "(d)", "(z)", "(y)", "(n)", "(h)"  
+];
+
 
     var gifShortcuts = [  
         "admin","alien","angel","angry","anyone","argh","arrow","awww","baby","badair","badday","baloon","ban","banned",  
@@ -210,13 +216,8 @@ function convertAresFormattingToHTML(text) {
   
         // Underline toggle  
         if (c === '\x07') {  
-            if (underlineOpen) {
-                result += '</span>';
-                underlineOpen = false;
-            } else {
-                result += '<span style="text-decoration:underline;">';
-                underlineOpen = true;
-            }
+            underlineOpen = !underlineOpen;  
+            result += underlineOpen ? '<u>' : '</u>';  
             i++;  
             continue;  
         }  
@@ -226,7 +227,7 @@ function convertAresFormattingToHTML(text) {
             if (fontOpen) { result += '</font>'; fontOpen = false; }  
             if (bgSpanOpen) { result += '</span>'; bgSpanOpen = false; }  
             if (boldOpen) { result += '</b>'; boldOpen = false; }  
-            if (underlineOpen) { result += '</span>'; underlineOpen = false; }  
+            if (underlineOpen) { result += '</u>'; underlineOpen = false; }  
             i++;  
             continue;  
         }  
@@ -237,7 +238,7 @@ function convertAresFormattingToHTML(text) {
   
     // Close any open tags  
     if (boldOpen) result += '</b>';  
-    if (underlineOpen) result += '</span>';  
+    if (underlineOpen) result += '</u>';  
     if (fontOpen) result += '</font>';  
     if (bgSpanOpen) result += '</span>';  
   
@@ -267,22 +268,11 @@ function convertEmojisToImages(text) {
             var low = text.charCodeAt(i + 1);  
             if (low >= 0xDC00 && low <= 0xDFFF) {  
                 var codepoint = (code - 0xD800) * 0x400 + (low - 0xDC00) + 0x10000;  
-                
-                // Only convert actual emoji ranges (not all high codepoints)
-                if ((codepoint >= 0x1F300 && codepoint <= 0x1F9FF) || // Emoticons, symbols, misc
-                    (codepoint >= 0x1F600 && codepoint <= 0x1F64F) || // Emoticons
-                    (codepoint >= 0x1F680 && codepoint <= 0x1F6FF)) { // Transport & Map
-                    var hex = codepoint.toString(16).toLowerCase();  
-                    result += '<img src="https://cdn.jsdelivr.net/npm/emoji-datasource-google/img/google/64/' +  
-                              hex + '.png" width="19" height="19" style="vertical-align:bottom;" border="0" />';  
-                    i += 2;  
-                    continue;
-                }
-                
-                // Not an emoji, keep original characters
-                result += text.charAt(i) + text.charAt(i + 1);
-                i += 2;
-                continue;
+                var hex = codepoint.toString(16).toLowerCase();  
+                result += '<img src="https://cdn.jsdelivr.net/npm/emoji-datasource-google/img/google/64/' +  
+                          hex + '.png" width="19" height="19" style="vertical-align:bottom;" border="0" />';  
+                i += 2;  
+                continue;  
             }  
         }  
   
