@@ -1,7 +1,3 @@
-//TODO FIX SOME BG COLORS AND SPACES
-
-const { use } = require("react");
-
 // ============================================================  
 // Color table matching Helpers.cs color mapping (declare once)  
 // ============================================================  
